@@ -1,11 +1,11 @@
 <?php
 namespace App\Model;
 class Cliente {
-    private int id;
-    private string nome;
-    private string email;
-    private string cidade;
-    private string estado;
+    private int $id;
+    private string $nome;
+    private string $email;
+    private string $cidade;
+    private string $estado;
 
     // Getters e setters
     public function getId(): int

@@ -6,6 +6,6 @@ use App\Controller\IndexController;
 
 $frontController = new FrontController();
 
-$frontController->bind('index', IndexController::class);
+$frontController->bind('/', IndexController::class);
 
 $frontController->run();

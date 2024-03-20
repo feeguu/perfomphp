@@ -3,7 +3,7 @@
 namespace App;
 
 class FrontController {
-    private routeMap = [];
+    private $routeMap = [];
 
     public function __construct() {
         $this->routeMap = [
@@ -15,7 +15,7 @@ class FrontController {
     }
 
     public function run() {
-        $route = $_GET['route'] ?? 'cliente';
+        $route = $_SERVER['REQUEST_URI']; 
         $controller = $this->routeMap[$route];
         $c = new $controller;
         $c->handleRequest();
