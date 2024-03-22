@@ -69,9 +69,17 @@ class Cliente {
     }
 
     // Métodos
-    public function __construct(int $id, string $nome, string $email, string $cidade, string $estado)
-    {
-        $this->id = $id;
+    public function __construct(string $nome, string $email, string $cidade, string $estado)
+    {   
+        if ($nome === null || $email === null || $cidade === null || $estado === null) {
+            throw new \Exception("Todos os campos são obrigatórios.");
+            return;
+        }
+
+        if (empty($nome) || empty($email) || empty($cidade) || empty($estado)) {
+            throw new \Exception("Todos os campos são obrigatórios.");
+        }
+
         $this->nome = $nome;
         $this->email = $email;
         $this->cidade = $cidade;

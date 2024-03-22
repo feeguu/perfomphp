@@ -1,4 +1,5 @@
 <?php
+namespace App\Repository;
 
 use App\Database\Database;
 use App\Model\Cliente;
@@ -12,7 +13,7 @@ class ClienteRepository {
     }
 
     public function insert(Cliente $c) {
-        $query = $this->conn->prepare("INSERT INTO cliente (nome, email, cidade, estado) VALUES (:nome, :email, :cidade, :estado)");
+        $query = $this->conn->prepare("INSERT INTO clientes (nome, email, cidade, estado) VALUES (:nome, :email, :cidade, :estado)");
         $query->bindParam(":nome", $c->getNome());
         $query->bindParam(":email", $c->getEmail());
         $query->bindParam(":cidade", $c->getCidade());
@@ -23,20 +24,20 @@ class ClienteRepository {
     }
 
     public function find() {
-        $query = $this->conn->prepare("SELECT * FROM cliente");
+        $query = $this->conn->prepare("SELECT * FROM clientes");
         $query->execute();
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function findById(int $id) {
-        $query = $this->conn->prepare("SELECT * FROM cliente WHERE id = :id");
+        $query = $this->conn->prepare("SELECT * FROM clientes WHERE cliente_id = :id");
         $query->bindParam(":id", $id);
         $query->execute();
         return $query->fetch(PDO::FETCH_ASSOC);
     }
 
     public function update(Cliente $c) {
-        $query = $this->conn->prepare("UPDATE cliente SET nome = :nome, email = :email, cidade = :cidade, estado = :estado WHERE id = :id");
+        $query = $this->conn->prepare("UPDATE clientes SET nome = :nome, email = :email, cidade = :cidade, estado = :estado WHERE cliente_id = :id");
         $query->bindParam(":nome", $c->getNome());
         $query->bindParam(":email", $c->getEmail());
         $query->bindParam(":cidade", $c->getCidade());
@@ -46,7 +47,7 @@ class ClienteRepository {
     }
 
     public function delete(int $id) {
-        $query = $this->conn->prepare("DELETE FROM cliente WHERE id = :id");
+        $query = $this->conn->prepare("DELETE FROM clientes WHERE cliente_id = :id");
         $query->bindParam(":id", $id);
         $query->execute();
     }

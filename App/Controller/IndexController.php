@@ -2,9 +2,10 @@
 
 namespace App\Controller;
 
-use App\Model\Mega;
-use App\Repository\MegaRepository;
 use App\Controller\IController;
+use App\Repository\ClienteRepository;
+use App\Model\Cliente;
+use Exception;
 
 class IndexController implements IController
 {
@@ -21,76 +22,118 @@ class IndexController implements IController
             exit(0);
         }
 
+        $repository = new ClienteRepository();
+
+        if (!$repository) {
+            http_response_code(500);
+            echo json_encode(["error" => "Erro ao conectar com o banco de dados."]);
+            exit(0);
+        }
+
         switch ($_SERVER['REQUEST_METHOD']) {
+            case 'GET':
+                if (isset($_GET['id'])) {
+                    $data = $repository->findById($_GET['id']);
+                    if (!$data) {
+                        http_response_code(404);
+                        echo json_encode(["error" => "Cliente não encontrado."]);
+                        exit(0);
+                    }
+                    echo json_encode($data);
+                    exit(0);
+                }
+                $data = $repository->find();
+                echo json_encode($data);
+                break;
             case 'POST':
                 $data = json_decode(file_get_contents("php://input"));
-
-                if (!isValid($data)) {
+                if (!$data) {
                     http_response_code(400);
-                    echo json_encode(["error" => "Dados de entrada inválidos."]);
-                    break;
+                    echo json_encode(["error" => "Dados inválidos."]);
+                    exit(0);
+                }
+                try {
+                    $cliente = $this->parseCliente($data);
+                    http_response_code(201);
+                    return $repository->insert($cliente);
                 }
 
-                $mega = new Mega();
-
-                $mega->setNum1(intval($data->num1))
-                    ->setNum2(intval($data->num2))
-                    ->setNum3(intval($data->num3))
-                    ->setNum4(intval($data->num4))
-                    ->setNum5(intval($data->num5))
-                    ->setNum6(intval($data->num6));
-                $repository = new MegaRepository();
-                $success = $repository->insertMega($mega);
-                if ($success) {
-                    http_response_code(200);
-                    echo json_encode(["message" => "Dados inseridos com sucesso."]);
-                } else {
-                    http_response_code(500);
-                    echo json_encode(["message" => "Falha ao inserir dados."]);
+                catch (Exception $e) {
+                    http_response_code(400);
+                    echo json_encode(["error" => $e->getMessage()]);
+                    exit(0);
                 }
                 break;
-            case 'GET':
-                $mega = new Mega();
-                $repository = new MegaRepository();
-                if (isset($_GET['id'])) {
-                    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-                    if ($id === false) {
+
+            case 'PUT': 
+                $data = json_decode(file_get_contents("php://input"));
+                if (!$data) {
+                    http_response_code(400);
+                    echo json_encode(["error" => "Dados inválidos."]);
+                    exit(0);
+                }
+                try {
+                    $cliente = $this->parseCliente($data);
+                    $id = $data->id;
+
+                    if (!$id) {
                         http_response_code(400);
-                        echo json_encode(['error' => 'O valor do ID fornecido não é um inteiro válido.']);
-                        exit;
-                    } else {
-                        $mega = new Mega();
-                        $repository = new MegaRepository();
-                        $mega->setId($id);
-                        $result = $repository->getById($mega);
+                        echo json_encode(["error" => "ID não informado."]);
+                        exit(0);
                     }
-                } else {
-                    $result = $repository->getAll();
-                }
 
-                if ($result) {
+                    if (!$repository->findById($id)) {
+                        http_response_code(404);
+                        echo json_encode(["error" => "Cliente não encontrado."]);
+                        exit(0);
+                    }
+
+                    $cliente->setId($id);
+                    $repository->update($cliente);
                     http_response_code(200);
-                    echo json_encode($result);
-                } else {
-                    http_response_code(404);
-                    echo json_encode(["message" => "Nenhum dado encontrado."]);
+                } catch (Exception $e) {
+                    http_response_code(400);
+                    echo json_encode(["error" => $e->getMessage()]);
+                    exit(0);
                 }
                 break;
+            
+            case 'DELETE':
+                $id = $_GET['id'];
+                if (!$id) {
+                    http_response_code(400);
+                    echo json_encode(["error" => "ID não informado."]);
+                    exit(0);
+                }
+                if (!$repository->findById($id)) {
+                    http_response_code(404);
+                    echo json_encode(["error" => "Cliente não encontrado."]);
+                    exit(0);
+                }
+                $repository->delete($id);
+                http_response_code(200);
+                break;
+
             default:
                 http_response_code(405);
                 echo json_encode(["error" => "Método não permitido."]);
                 break;
         }
+    }
 
-        function isValid($data)
-        {
-            $requiredFields = ['num1', 'num2', 'num3', 'num4', 'num5', 'num6'];
-            foreach ($requiredFields as $field) {
-                if (!isset($data->$field) || !is_numeric($data->$field)) {
-                    return false;
-                }
-            }
-            return true;
+    private function parseCliente($data)
+    {   
+        $nome = $data->nome;
+        $email = $data->email;
+        $cidade = $data->cidade;
+        $estado = $data->estado;
+
+        if (!$nome || !$email || !$cidade || !$estado) {
+            throw new Exception("Dados inválidos.");
         }
+
+        $cliente = new Cliente($nome, $email, $cidade, $estado);
+        
+        return $cliente;
     }
 }

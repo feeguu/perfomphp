@@ -15,8 +15,12 @@ class FrontController {
     }
 
     public function run() {
-        $route = $_SERVER['REQUEST_URI']; 
+        $route = explode('?', $_SERVER['REQUEST_URI'])[0]; 
         $controller = $this->routeMap[$route];
+        if (!$controller) {
+            http_response_code(404);
+            exit();
+        }
         $c = new $controller;
         $c->handleRequest();
     }
